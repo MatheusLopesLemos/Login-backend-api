@@ -1,13 +1,38 @@
 import express, { json } from 'express';
 import { PrismaClient } from '@prisma/client'
+import e from 'express';
 
 const prisma = new PrismaClient()
 
 const app = express();
 app.use(express.json());
 
+app.get('/users', async (req, res) => { 
 
-const users = [	];
+    let users = [];
+
+    if(req.query) {
+
+        users = await prisma.user.findMany({
+
+            where: {
+                name: req.query.name,
+                email: req.query.email,
+                age: req.query.age
+
+            }
+
+        })
+
+    } else{
+
+        users = await prisma.user.findMany()
+
+    }
+   
+
+    res.status(200).json(users);
+});
 
 app.post('/users', async (req, res) => { 
 
@@ -17,26 +42,40 @@ app.post('/users', async (req, res) => {
             email: req.body.email,
             age: req.body.age
         }
-    }).then((res) => {
-        console.log(res);
-    }).catch((error) => {
-        console.log(error);
-    });
+    })
 
     res.status(201).json(req.body);
 });
 
-app.get('/users', async (req, res) => { 
 
-    const users = await prisma.user.findMany()
 
-    res.status(200).json(users);
+
+app.put('/users/:id', async (req, res) => { 
+
+    await prisma.user.update({
+        where: { 
+            id: req.params.id 
+        },
+
+        data: {
+            name: req.body.name,
+            email: req.body.email,
+            age: req.body.age
+        }
+    })
+
+    res.status(201).json(req.body);
 });
 
 
-app.put('/users')
+app.delete('/users/:id', async (req, res) => { 
 
+    await prisma.user.delete({
+        where: { 
+            id: req.params.id 
+        },
 
-app.delete('/users')
-
+    })
+    res.status(201).json({msg: "User deleted"});
+});
 app.listen(3000);
